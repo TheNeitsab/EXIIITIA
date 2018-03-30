@@ -80,7 +80,7 @@ void setup() {
 void loop() {
   
   //blockingHoldAndPB();
-  //blockingPatternAndPB();
+  blockingPatternAndPB();
   
   fsrVal   =   analogRead(fsrPin);             //Getting FSR value's
   Serial.println(fsrVal);
