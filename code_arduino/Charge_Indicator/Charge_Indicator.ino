@@ -23,17 +23,15 @@
 
 // ===================  PINS & OUT DEFINITIONS  ===================
 
-#define   NeoPin    6
+#define   NeoPin    0
 #define   NeoNb     1
 
-#define   BatPin    A0
+#define   BatPin    1
 
 const double    Full    =   4.13;
 const double    High    =   3.99;
 const double    Mid     =   3.85;
 const double    Low     =   3.3;
-
-#define   onSerial  true
 
 Adafruit_NeoPixel Neo = Adafruit_NeoPixel(NeoNb, NeoPin, NEO_GRB + NEO_KHZ800);
 
@@ -42,8 +40,8 @@ Adafruit_NeoPixel Neo = Adafruit_NeoPixel(NeoNb, NeoPin, NEO_GRB + NEO_KHZ800);
 // ================================================================
 
 void setup() {
+  pinMode(BatPin, INPUT);
   Neo.begin();
-  Serial.begin(9600); 
 }
 
 // ================================================================
@@ -52,13 +50,9 @@ void setup() {
 
 void loop() {
   
-  int   BatVal    =   analogRead(BatPin);               //Getting Battery's value
-  double    BatVolt   =   mapf(BatVal, 0, 1023, 0, 5);  //Mapping it to 0. - 5. Volts
-  if(onSerial){
-    Serial.print(BatVal);
-    Serial.print(" | ");
-    Serial.println(BatVolt);
-  }
+  int   BatVal    =   analogRead(BatPin);                 //Getting Battery's value
+  double    BatVolt3  =   mapf(BatVal, 0, 1023, 0, 3.3);  //Mapping it to 0. - 3.3 Volts
+  double    BatVolt   =   mapf(BatVolt3, 0, 3.3, 0, 5);   //Mapping it to 0. - 5. Volts
 
   //State indication
   if(BatVolt > Full){

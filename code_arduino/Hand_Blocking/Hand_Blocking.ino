@@ -13,6 +13,7 @@
  * after a 3 seconds contraction, while the other needs a pattern 
  * of 2 short contractions. Both are also allowing the (un)blocking 
  * using the available pushbutton on the hand.
+ * Finally a vocal recognition based solution has been implemented.
 */
 
 
@@ -23,21 +24,29 @@
 // =========================  LIBRARIES  ==========================
 
 #include <Servo.h>
+#include <SoftwareSerial.h>                 //Used to emulate Serial ports on other pins
 
 // ===================  PINS & OUT DEFINITIONS  ===================
 
-Servo myServo;
+Servo            myServo;
+SoftwareSerial   mySerial(10, 11);          //Setting RX, TX on pin 10, 11
+
+byte com = 0;                               //Message got from Vocal Recognition Module
 
 int const   fsrPin  =   A0;                 //Analog Pin for FSR Sensor
 
 int const   PBPin   =   2;                  //Digital Pin for PushButton
 
 int const   RPin    =   12;                 //Digital Pin for Red component of RGB LED
-int const   GPin    =   11;                 //Digital Pin for Green component of RGB LED
-int const   BPin    =   6;                  //Digital Pin for Blue component of RGB LED     
+int const   GPin    =   13;                 //Digital Pin for Green component of RGB LED
+int const   BPin    =   6;                  //Digital Pin for Blue component of RGB LED    
+
+int const   Buzzer  =   4;                  //Digital Pin for Buzzer
 
 int   fsrVal    =   0;                      //Value returned by FSR sensor
 int   angle     =   0;                      //Converted value in degrees for Servo
+
+boolean PBVal   =   false;                  //Value returned by PushButton
 
 unsigned long   previousMillis    =   0;    //Previous time for blocking
 unsigned long   currentMillis     =   0;    //Current time for blocking 
@@ -54,6 +63,9 @@ boolean   check3    =   false;
 boolean   check4    =   false;
 boolean   check5    =   false;
 
+boolean   Bcheck    =   true;               //Buzzer checker to avoid repetition
+
+
 // ================================================================
 // ===                      INITIAL SETUP                       ===
 // ================================================================
@@ -68,9 +80,26 @@ void setup() {
   pinMode(RPin, OUTPUT);    //Set Red component pin of RGB LED
   pinMode(GPin, OUTPUT);    //Set Green component pin of RGB LED
   pinMode(BPin, OUTPUT);    //Set Blue component pin of RGB LED
-    
-  Serial.begin(9600);
+  pinMode(Buzzer, OUTPUT);  //Set Buzzer's pin
+
+  Serial.begin(9600);       //Initializing USB Serial
   //while(!Serial);           //Waiting for Serial to be initialized
+  
+  mySerial.begin(9600);     //Initializing Vocal Module's Serial
+
+  Serial.println("Starting Setup");
+  //Setting the module in Compact Mode
+  mySerial.write(0xAA);
+  mySerial.write(0x37);
+  Serial.println("Compact Mode OK");
+  
+  delay(2000);
+  
+  //Importing Group1 vocal commands
+  mySerial.write(0xAA);
+  mySerial.write(0x21);
+  Serial.println("Group 1 imported");
+  Serial.println("Setup has done !");
 }
 
 // ================================================================
@@ -79,11 +108,7 @@ void setup() {
 
 void loop() {
   
-  //blockingHoldAndPB();
-  blockingPatternAndPB();
-  
   fsrVal   =   analogRead(fsrPin);             //Getting FSR value's
-  Serial.println(fsrVal);
   angle    =   map(fsrVal, 0, 1023, 0, 179);   //Mapping FSR values to angle ones
 
   //LED contraction strength indicator
@@ -109,6 +134,11 @@ void loop() {
     analogWrite(BPin,254);
   }
 
+  //Selecting the blocking function
+  vocalBlocking();
+  //blockingHoldAndPB();
+  //blockingPatternAndPB();
+  
   myServo.write(angle);   //Moving servo
   delay(15);              //Allow time for servo to change position
 }
@@ -118,10 +148,10 @@ void loop() {
 // ================================================================
 
 // =================  void blockingHoldAndPB()  ===================
-// Description : (un)blocking the hand in current position after a
-//                3 second contraction. Possibility to (un)block it
-//                using the pushbutton.
-
+/* Description : (un)blocking the hand in current position after a
+ *                3 second contraction. Possibility to (un)block it
+ *                using the pushbutton.
+*/
 // Parameters : NONE
 
 void blockingHoldAndPB(){
@@ -176,10 +206,10 @@ void blockingHoldAndPB(){
 }
 
 // =================  void blockingHoldAndPB()  ===================
-// Description : (un)blocking the hand in current position after a
-//                2 short contracions pattern. Possibility to 
-//               (un)block it using the pushbutton.
-
+/* Description : (un)blocking the hand in current position after a
+ *                2 short contractions pattern. Possibility to 
+ *               (un)block it using the pushbutton.
+*/
 // Parameters : NONE
 
 void blockingPatternAndPB(){
@@ -281,6 +311,97 @@ void blockingPatternAndPB(){
     //Time reset
     currentMillis   =   millis();
     previousMillis  =   currentMillis; 
+  }
+}
+
+// ===================  void vocalBlocking()  =====================
+/* Description : (un)blocking the hand thanks to vocal recognition.
+ *               In order to initialize the blocking process, you
+ *               must say "EXIII". This will automatically block in
+ *               current position for 3 seconds waiting for one of
+ *               the following available orders :
+ *               - "OUVERT" : blocks the hand in OPEN position
+ *               - "FERMÉ"  : blocks the hand in CLOSED position
+ *               - "BLOQUE" : blocks the hand in current position
+ *               After 3 seconds without any correct, the system is
+ *               unblocked.
+ *               In order to unblock it after blocking in one of
+ *               the previous positions, you must say "DÉBLOQUE".
+*/
+// Parameters : NONE
+
+void vocalBlocking(){
+  //Checking if something has been received
+  if (mySerial.available()){
+    com   =   mySerial.read();              //Storing the received data
+    
+    //Checking for "EXIII" command
+    if(com == 0x11){
+      currentMillis   =   millis();
+      previousMillis  =   currentMillis;
+
+      if(Bcheck){
+        tone(Buzzer, 500, 50);
+        Bcheck = !Bcheck;
+      } 
+      //Checking if the interval is overpassed or if "DÉBLOQUE" has been said
+      while((currentMillis - previousMillis < interval) && (com != 0x15)){
+        currentMillis   =   millis();
+        com   =   mySerial.read();
+
+        switch(com){
+          //Checking for "BLOQUE" command
+          case 0x12:  
+            Bcheck = !Bcheck;
+
+            if(Bcheck){
+              tone(Buzzer, 500, 50);
+              Bcheck = !Bcheck;
+            }
+            myServo.write(angle);     //Moving servo
+            delay(15);                //Allow time for servo to change position
+            while((com != 0x15)){
+              com   =   mySerial.read();
+            }      
+          break;
+          //Checking for "OUVERT" command
+          case 0x13:
+            Bcheck = !Bcheck;
+
+            if(Bcheck){
+              tone(Buzzer, 500, 50);
+              Bcheck = !Bcheck;
+            }  
+            myServo.write(0);         //Moving servo
+            delay(15);                //Allow time for servo to change position 
+            while((com != 0x15)){
+              com   =   mySerial.read();
+            }           
+          break;
+          //Checking for "FERMÉ" command
+          case 0x14:  
+            Bcheck = !Bcheck;
+
+            if(Bcheck){
+              tone(Buzzer, 500, 50);
+              Bcheck = !Bcheck;
+            }
+            myServo.write(175);       //Moving servo
+            delay(15);                //Allow time for servo to change position
+            while((com != 0x15)){
+              com   =   mySerial.read();
+            }           
+          break;    
+        }
+      }
+      
+      //Time reset
+      currentMillis   =   millis();
+      previousMillis  =   currentMillis;
+
+      Bcheck = !Bcheck;
+      tone(Buzzer, 500, 50);
+    }
   }
 }
 
