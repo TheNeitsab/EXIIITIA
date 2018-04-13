@@ -108,7 +108,7 @@ void setup() {
 
 void loop() {
   
-  fsrVal   =   analogRead(fsrPin);             //Getting FSR value's
+  fsrVal   =   readSensor();             //Getting FSR value's
   angle    =   map(fsrVal, 0, 1023, 0, 179);   //Mapping FSR values to angle ones
 
   //LED contraction strength indicator
@@ -156,7 +156,7 @@ void loop() {
 
 void blockingHoldAndPB(){
 
-  int   fsr   =   analogRead(fsrPin);
+  int   fsr   =   readSensor();
   boolean   PB   =   digitalRead(PBPin);
   
   if(fsr > thresholdHigh){    
@@ -178,7 +178,7 @@ void blockingHoldAndPB(){
 
       //Holding condition for blocking
       while((currentMillis - previousMillis < interval) && (!PB)){
-        fsr   =   analogRead(fsrPin);
+        fsr   =   readSensor();
         PB    =   digitalRead(PBPin);
         
         if(fsr > thresholdHigh){
@@ -214,7 +214,7 @@ void blockingHoldAndPB(){
 
 void blockingPatternAndPB(){
 
-  int   fsr   =   analogRead(fsrPin);
+  int   fsr   =   readSensor();
   boolean   PB   =   digitalRead(PBPin);
   
   if((fsr >= thresholdHigh) || check1){
@@ -254,7 +254,7 @@ void blockingPatternAndPB(){
       delay(30);
       
       while((check4 == false) && (!PB)){
-        fsr   =   analogRead(fsrPin);
+        fsr   =   readSensor();
         PB    =   digitalRead(PBPin);
         
         if((fsr >= thresholdHigh) || check1){
@@ -317,12 +317,12 @@ void blockingPatternAndPB(){
 // ===================  void vocalBlocking()  =====================
 /* Description : (un)blocking the hand thanks to vocal recognition.
  *               In order to initialize the blocking process, you
- *               must say "EXIII". This will automatically block in
- *               current position for 3 seconds waiting for one of
- *               the following available orders :
- *               - "OUVERT" : blocks the hand in OPEN position
- *               - "FERMÉ"  : blocks the hand in CLOSED position
- *               - "BLOQUE" : blocks the hand in current position
+ *               must say "OK EXIII". This will automatically block 
+ *               in current position for 3 seconds waiting for one 
+ *               of the following available orders :
+ *               - "BLOQUE OUVERT" : blocks the hand in OPEN position
+ *               - "BLOQUE FERMÉ"  : blocks the hand in CLOSED position
+ *               - "BLOQUE EN POSITION" : blocks the hand in current position
  *               After 3 seconds without any correct, the system is
  *               unblocked.
  *               In order to unblock it after blocking in one of
@@ -335,7 +335,7 @@ void vocalBlocking(){
   if (mySerial.available()){
     com   =   mySerial.read();              //Storing the received data
     
-    //Checking for "EXIII" command
+    //Checking for "OK EXIII" command
     if(com == 0x11){
       currentMillis   =   millis();
       previousMillis  =   currentMillis;
@@ -350,7 +350,7 @@ void vocalBlocking(){
         com   =   mySerial.read();
 
         switch(com){
-          //Checking for "BLOQUE" command
+          //Checking for "BLOQUE OUVERT" command
           case 0x12:  
             Bcheck = !Bcheck;
 
@@ -358,13 +358,13 @@ void vocalBlocking(){
               tone(Buzzer, 500, 50);
               Bcheck = !Bcheck;
             }
-            myServo.write(angle);     //Moving servo
+            myServo.write(0);     //Moving servo
             delay(15);                //Allow time for servo to change position
             while((com != 0x15)){
               com   =   mySerial.read();
             }      
           break;
-          //Checking for "OUVERT" command
+          //Checking for "BLOQUE FERMÉ" command
           case 0x13:
             Bcheck = !Bcheck;
 
@@ -372,13 +372,13 @@ void vocalBlocking(){
               tone(Buzzer, 500, 50);
               Bcheck = !Bcheck;
             }  
-            myServo.write(0);         //Moving servo
+            myServo.write(175);       //Moving servo
             delay(15);                //Allow time for servo to change position 
             while((com != 0x15)){
               com   =   mySerial.read();
             }           
           break;
-          //Checking for "FERMÉ" command
+          //Checking for "BLOQUE EN POSITION" command
           case 0x14:  
             Bcheck = !Bcheck;
 
@@ -386,7 +386,7 @@ void vocalBlocking(){
               tone(Buzzer, 500, 50);
               Bcheck = !Bcheck;
             }
-            myServo.write(175);       //Moving servo
+            myServo.write(angle);     //Moving servo
             delay(15);                //Allow time for servo to change position
             while((com != 0x15)){
               com   =   mySerial.read();
@@ -403,6 +403,15 @@ void vocalBlocking(){
       tone(Buzzer, 500, 50);
     }
   }
+}
+
+int readSensor() {
+  int i, sval;
+  for(i = 0; i < 10; i++) {
+    sval   +=   analogRead(fsrPin);
+  }
+  sval   =   sval/10;
+  return sval;
 }
 
 
