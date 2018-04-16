@@ -339,11 +339,9 @@ void vocalBlocking(){
     if(com == 0x11){
       currentMillis   =   millis();
       previousMillis  =   currentMillis;
-
-      if(Bcheck){
-        tone(Buzzer, 500, 50);
-        Bcheck = !Bcheck;
-      } 
+ 
+      tone(Buzzer, 500, 50);
+   
       //Checking if the interval is overpassed or if "DÉBLOQUE" has been said
       while((currentMillis - previousMillis < interval) && (com != 0x15)){
         currentMillis   =   millis();
@@ -352,44 +350,80 @@ void vocalBlocking(){
         switch(com){
           //Checking for "BLOQUE OUVERT" command
           case 0x12:  
-            Bcheck = !Bcheck;
 
-            if(Bcheck){
-              tone(Buzzer, 500, 50);
-              Bcheck = !Bcheck;
-            }
-            myServo.write(0);     //Moving servo
+            tone(Buzzer, 500, 50);
+
+            myServo.write(0);         //Moving servo
             delay(15);                //Allow time for servo to change position
             while((com != 0x15)){
+              currentMillis   =   millis();
+              previousMillis  =   currentMillis;
+              
               com   =   mySerial.read();
+              if(com == 0x11){
+                tone(Buzzer, 500, 50);
+                while((currentMillis - previousMillis < interval) && (com != 0x15)){
+                  
+                  currentMillis   =   millis();
+                  com   =   mySerial.read();
+                }
+                tone(Buzzer, 500, 50);
+              }
+              else{
+                com = 0x00;
+              }
             }      
           break;
           //Checking for "BLOQUE FERMÉ" command
           case 0x13:
-            Bcheck = !Bcheck;
 
-            if(Bcheck){
-              tone(Buzzer, 500, 50);
-              Bcheck = !Bcheck;
-            }  
+            tone(Buzzer, 500, 50);
+
             myServo.write(175);       //Moving servo
             delay(15);                //Allow time for servo to change position 
             while((com != 0x15)){
+              currentMillis   =   millis();
+              previousMillis  =   currentMillis;
+              
               com   =   mySerial.read();
+              if(com == 0x11){
+                tone(Buzzer, 500, 50);
+                while((currentMillis - previousMillis < interval) && (com != 0x15)){
+                  
+                  currentMillis   =   millis();
+                  com   =   mySerial.read();
+                }
+                tone(Buzzer, 500, 50);
+              }
+              else{
+                com = 0x00;
+              }
             }           
           break;
           //Checking for "BLOQUE EN POSITION" command
           case 0x14:  
-            Bcheck = !Bcheck;
 
-            if(Bcheck){
-              tone(Buzzer, 500, 50);
-              Bcheck = !Bcheck;
-            }
+            tone(Buzzer, 500, 50);
+
             myServo.write(angle);     //Moving servo
             delay(15);                //Allow time for servo to change position
             while((com != 0x15)){
+              currentMillis   =   millis();
+              previousMillis  =   currentMillis;
+              
               com   =   mySerial.read();
+              if(com == 0x11){
+                tone(Buzzer, 500, 50);
+                while((currentMillis - previousMillis < interval) && (com != 0x15)){
+                  
+                  currentMillis   =   millis();
+                  com   =   mySerial.read();
+                }
+                tone(Buzzer, 500, 50);
+              }
+              else{
+                com = 0x00;
+              }
             }           
           break;    
         }
@@ -399,7 +433,6 @@ void vocalBlocking(){
       currentMillis   =   millis();
       previousMillis  =   currentMillis;
 
-      Bcheck = !Bcheck;
       tone(Buzzer, 500, 50);
     }
   }
