@@ -24,14 +24,19 @@
 // ===================  PINS & OUT DEFINITIONS  ===================
 
 #define   NeoPin    0
-#define   NeoNb     1
+#define   NeoNb     4
 
 #define   BatPin    1
 
-const double    Full    =   4.13;
-const double    High    =   3.99;
-const double    Mid     =   3.85;
-const double    Low     =   3.3;
+const double    Full    =   8.4;
+const double    High    =   8.1;
+const double    Mid     =   7.2;
+const double    Low     =   6.3;
+
+const int   interval      =   500;
+double    currentMillis   =   0;
+double    previousMillis  =   0;
+bool    check             =   true;
 
 Adafruit_NeoPixel Neo = Adafruit_NeoPixel(NeoNb, NeoPin, NEO_GRB + NEO_KHZ800);
 
@@ -50,25 +55,54 @@ void setup() {
 
 void loop() {
   
-  int   BatVal    =   analogRead(BatPin);                 //Getting Battery's value
+  int   BatVal    =   readSensor();                 //Getting Battery's value
   double    BatVolt3  =   mapf(BatVal, 0, 1023, 0, 3.3);  //Mapping it to 0. - 3.3 Volts
-  double    BatVolt   =   mapf(BatVolt3, 0, 3.3, 0, 5);   //Mapping it to 0. - 5. Volts
+  double    BatVolt   =   mapf(BatVolt3, 0, 3.3, 0, 8.5);   //Mapping it to 0. - 8.5 Volts
 
   //State indication
   if(BatVolt > Full){
-    Neo.setPixelColor(0, Neo.Color(0,0,255));
+    Neo.setPixelColor(0, Neo.Color(0,20,0)); 
+    Neo.setPixelColor(1, Neo.Color(0,20,0)); 
+    Neo.setPixelColor(2, Neo.Color(0,20,0)); 
+    Neo.setPixelColor(3, Neo.Color(0,20,0)); 
   }
   else if((BatVolt >= High) && (BatVolt < Full)){
-    Neo.setPixelColor(0, Neo.Color(0,255,0));
+    Neo.setPixelColor(0, Neo.Color(0,0,20)); 
+    Neo.setPixelColor(1, Neo.Color(0,0,20)); 
+    Neo.setPixelColor(2, Neo.Color(0,0,20)); 
+    Neo.setPixelColor(3, Neo.Color(0,0,0)); 
   }
   else if((BatVolt >= Mid) && (BatVolt < High)){
-    Neo.setPixelColor(0, Neo.Color(255,255,0));
+    Neo.setPixelColor(0, Neo.Color(20,5,0)); 
+    Neo.setPixelColor(1, Neo.Color(20,5,0)); 
+    Neo.setPixelColor(2, Neo.Color(0,0,0)); 
+    Neo.setPixelColor(3, Neo.Color(0,0,0)); 
   }
   else if((BatVolt >= Low) && (BatVolt < Mid)){
-    Neo.setPixelColor(0, Neo.Color(255,173,0));
+    Neo.setPixelColor(0, Neo.Color(20,0,0)); 
+    Neo.setPixelColor(1, Neo.Color(0,0,0)); 
+    Neo.setPixelColor(2, Neo.Color(0,0,0)); 
+    Neo.setPixelColor(3, Neo.Color(0,0,0)); 
   }
   else{
-    Neo.setPixelColor(0, Neo.Color(255,0,0)); 
+    currentMillis = millis();
+    if(currentMillis - previousMillis > interval){
+      currentMillis   =   millis();
+      previousMillis  =   currentMillis;
+      check = !check;
+    }
+    if(check){
+      Neo.setPixelColor(0, Neo.Color(20,0,0)); 
+      Neo.setPixelColor(1, Neo.Color(20,0,0)); 
+      Neo.setPixelColor(2, Neo.Color(20,0,0)); 
+      Neo.setPixelColor(3, Neo.Color(20,0,0)); 
+    }
+    else{
+      Neo.setPixelColor(0, Neo.Color(0,0,0)); 
+      Neo.setPixelColor(1, Neo.Color(0,0,0)); 
+      Neo.setPixelColor(2, Neo.Color(0,0,0)); 
+      Neo.setPixelColor(3, Neo.Color(0,0,0));
+    }
   }
   
   Neo.show();
@@ -91,4 +125,19 @@ void loop() {
 
 double mapf(double val, double in_min, double in_max, double out_min, double out_max) {
     return (val - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+// ======================  int readSensor()  ======================
+// Description : getting sensor's value making an average over a 10
+//               values buffer to avoid any flickering
+
+// Parameters : OUT -> returns the averaged value
+
+int readSensor() {
+  int i, sval;
+  for(i = 0; i < 30; i++) {
+    sval   +=   analogRead(BatPin);
+  }
+  sval   =   sval/30;
+  return sval;
 }

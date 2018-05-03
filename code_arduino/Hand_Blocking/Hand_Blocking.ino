@@ -31,7 +31,7 @@
 Servo            myServo;
 SoftwareSerial   mySerial(10, 11);          //Setting RX, TX on pin 10, 11
 
-byte com = 0;                               //Message got from Vocal Recognition Module
+byte   com = 0;                             //Message got from Vocal Recognition Module
 
 int const   fsrPin  =   A0;                 //Analog Pin for FSR Sensor
 
@@ -62,8 +62,6 @@ boolean   check2    =   false;
 boolean   check3    =   false;
 boolean   check4    =   false;
 boolean   check5    =   false;
-
-boolean   Bcheck    =   true;               //Buzzer checker to avoid repetition
 
 
 // ================================================================
@@ -99,7 +97,7 @@ void setup() {
   mySerial.write(0xAA);
   mySerial.write(0x21);
   Serial.println("Group 1 imported");
-  Serial.println("Setup has done !");
+  Serial.println("Setup is done !");
 }
 
 // ================================================================
@@ -110,28 +108,24 @@ void loop() {
   
   fsrVal   =   readSensor();             //Getting FSR value's
   angle    =   map(fsrVal, 0, 1023, 0, 179);   //Mapping FSR values to angle ones
-
+  Serial.print(angle);
+  Serial.print(" | ");
+  Serial.println(fsrVal);
   //LED contraction strength indicator
   //Low
   if((fsrVal >= 0) && (fsrVal < 300)){
     //Displaying Red LED
-    analogWrite(RPin,254);
-    analogWrite(GPin,0);
-    analogWrite(BPin,0);
+    colorLED('R');
   }
   //Medium
   else if((fsrVal >= 300) && (fsrVal < 800)){
     //Displaying Green LED
-    analogWrite(RPin,0);
-    analogWrite(GPin,254);
-    analogWrite(BPin,0);
+    colorLED('G');
   }
   //High
   else if(fsrVal >= 800){
     //Displaying Blue LED
-    analogWrite(RPin,0);
-    analogWrite(GPin,0);
-    analogWrite(BPin,254);
+    colorLED('B');
   }
 
   //Selecting the blocking function
@@ -164,15 +158,12 @@ void blockingHoldAndPB(){
 
     //Checking for blocking confirmation
     if((currentMillis - previousMillis >= interval) || PB){
-      currentMillis   =   millis();
-      previousMillis  =   currentMillis;
+      timeReset();
       
       PB   =   false;
 
       //Displaying White LED
-      analogWrite(RPin,254);
-      analogWrite(GPin,254);
-      analogWrite(BPin,254);
+      colorLED('P');
 
       delay(1000);    //Allow time for blocking correctly
 
@@ -185,23 +176,18 @@ void blockingHoldAndPB(){
           currentMillis   =   millis();
         }
         else{
-          currentMillis   =   millis();
-          previousMillis  =   currentMillis;
+          timeReset();
         }  
       }
       //Reset
-      currentMillis   =   millis();
-      previousMillis  =   currentMillis;
+      timeReset();
 
-      analogWrite(RPin,0);
-      analogWrite(GPin,0);
-      analogWrite(BPin,0);
+      colorLED('N');
     }
   }
   else{
     //Getting current time of execution
-    currentMillis   =   millis();
-    previousMillis  =   currentMillis;  
+    timeReset(); 
   }
 }
 
@@ -236,9 +222,7 @@ void blockingPatternAndPB(){
     }
     else if(check4 || check5){
       //Displaying White LED
-      analogWrite(RPin,254);
-      analogWrite(GPin,254);
-      analogWrite(BPin,254);
+      colorLED('P');
 
       //Reset
       previousMillis   =   currentMillis;
@@ -281,13 +265,11 @@ void blockingPatternAndPB(){
         }
         else{
           //Time reset
-          currentMillis   =   millis();
-          previousMillis  =   currentMillis;
+          timeReset();
         }  
       }
       //Reset
-      currentMillis   =   millis();
-      previousMillis  =   currentMillis;
+      timeReset();
       
       check1   =   false;
       check2   =   false;
@@ -295,9 +277,7 @@ void blockingPatternAndPB(){
       check4   =   false;
       check5   =   false;
       
-      analogWrite(RPin,0);
-      analogWrite(GPin,0);
-      analogWrite(BPin,0);
+      colorLED('N');
     }
     else if((currentMillis - previousMillis >= 2000)){
       //Timeout reset
@@ -309,8 +289,7 @@ void blockingPatternAndPB(){
   }
   else{
     //Time reset
-    currentMillis   =   millis();
-    previousMillis  =   currentMillis; 
+    timeReset(); 
   }
 }
 
@@ -336,115 +315,135 @@ void vocalBlocking(){
     com   =   mySerial.read();              //Storing the received data
     
     //Checking for "OK EXIII" command
-    if(com == 0x11){
-      currentMillis   =   millis();
-      previousMillis  =   currentMillis;
- 
+    if(com == 0x11){    
+      colorLED('P');
       tone(Buzzer, 500, 50);
-   
+      timeReset();
       //Checking if the interval is overpassed or if "DÉBLOQUE" has been said
       while((currentMillis - previousMillis < interval) && (com != 0x15)){
         currentMillis   =   millis();
         com   =   mySerial.read();
 
         switch(com){
+          
           //Checking for "BLOQUE OUVERT" command
           case 0x12:  
-
+            colorLED('N');   
             tone(Buzzer, 500, 50);
-
             myServo.write(0);         //Moving servo
             delay(15);                //Allow time for servo to change position
-            while((com != 0x15)){
-              currentMillis   =   millis();
-              previousMillis  =   currentMillis;
-              
-              com   =   mySerial.read();
-              if(com == 0x11){
-                tone(Buzzer, 500, 50);
-                while((currentMillis - previousMillis < interval) && (com != 0x15)){
-                  
-                  currentMillis   =   millis();
-                  com   =   mySerial.read();
-                }
-                tone(Buzzer, 500, 50);
-              }
-              else{
-                com = 0x00;
-              }
-            }      
+            blocking();      
           break;
+          
           //Checking for "BLOQUE FERMÉ" command
           case 0x13:
-
+            colorLED('N');           
             tone(Buzzer, 500, 50);
-
             myServo.write(175);       //Moving servo
             delay(15);                //Allow time for servo to change position 
-            while((com != 0x15)){
-              currentMillis   =   millis();
-              previousMillis  =   currentMillis;
-              
-              com   =   mySerial.read();
-              if(com == 0x11){
-                tone(Buzzer, 500, 50);
-                while((currentMillis - previousMillis < interval) && (com != 0x15)){
-                  
-                  currentMillis   =   millis();
-                  com   =   mySerial.read();
-                }
-                tone(Buzzer, 500, 50);
-              }
-              else{
-                com = 0x00;
-              }
-            }           
+            blocking();          
           break;
+          
           //Checking for "BLOQUE EN POSITION" command
           case 0x14:  
-
+            colorLED('N');
             tone(Buzzer, 500, 50);
-
             myServo.write(angle);     //Moving servo
             delay(15);                //Allow time for servo to change position
-            while((com != 0x15)){
-              currentMillis   =   millis();
-              previousMillis  =   currentMillis;
-              
-              com   =   mySerial.read();
-              if(com == 0x11){
-                tone(Buzzer, 500, 50);
-                while((currentMillis - previousMillis < interval) && (com != 0x15)){
-                  
-                  currentMillis   =   millis();
-                  com   =   mySerial.read();
-                }
-                tone(Buzzer, 500, 50);
-              }
-              else{
-                com = 0x00;
-              }
-            }           
+            blocking();                    
           break;    
         }
       }
-      
-      //Time reset
-      currentMillis   =   millis();
-      previousMillis  =   currentMillis;
-
       tone(Buzzer, 500, 50);
+      timeReset();
     }
   }
 }
 
-int readSensor() {
+// =====================  int readSensor()  ======================
+/* Description : reading the incoming values from the sensor and
+ *               returning the average over a 10 values buffer to
+ *               avoid flickering.
+*/
+// Parameters : int -> average value from the buffer
+
+int readSensor(){
   int i, sval;
   for(i = 0; i < 10; i++) {
     sval   +=   analogRead(fsrPin);
   }
   sval   =   sval/10;
   return sval;
+}
+
+void blocking(){
+  while(com != 0x15){
+    timeReset();    
+    com   =   mySerial.read();
+    
+    if(com == 0x11){
+      colorLED('P');     
+      tone(Buzzer, 500, 50);
+      
+      while((currentMillis - previousMillis < interval) && (com != 0x15)){        
+        currentMillis   =   millis();
+        com   =   mySerial.read();
+      }
+      colorLED('N');    
+      tone(Buzzer, 500, 50);
+    }
+    else{
+      com = 0x00;
+    }
+  }
+}
+
+// ====================  void timeReset()  ======================
+/* Description : time reset related to the check of the time
+ *               interval.
+*/
+// Parameters : NONE
+
+void timeReset(){
+  currentMillis   =   millis();
+  previousMillis  =   currentMillis;
+}
+
+// ===============  void colorLED(char color)  ==================
+/* Description : setting the RGB LED to the according color passed
+ *               to the function.
+*/
+// Parameters : char color -> character representing the first
+//                            letter of the color.
+
+void colorLED(char color){
+  switch(color){
+    case 'R': //RED
+      analogWrite(RPin, 254);
+      analogWrite(GPin, 0);
+      analogWrite(BPin, 0);
+    break;
+    case 'G': //GREEN
+      analogWrite(RPin, 0);
+      analogWrite(GPin, 254);
+      analogWrite(BPin, 0);
+    break;
+    case 'B': //BLUE
+      analogWrite(RPin, 0);
+      analogWrite(GPin, 0);
+      analogWrite(BPin, 254);
+    break;
+    case 'P': //PURPLE
+      analogWrite(RPin, 254);
+      analogWrite(GPin, 254);
+      analogWrite(BPin, 0254);
+    break;
+    case 'N': //NONE
+      analogWrite(RPin, 0);
+      analogWrite(GPin, 0);
+      analogWrite(BPin, 0);
+    break;
+  }
 }
 
 

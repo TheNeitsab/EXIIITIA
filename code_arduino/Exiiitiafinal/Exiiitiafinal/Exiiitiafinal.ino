@@ -46,11 +46,11 @@ Servo   servoIndex;     //index finger
 Servo   servoOther;     //other three fingers
 Servo   servoThumb;     //thumb
 
-SoftwareSerial   mySerial(2, 4);            //Setting RX, TX on pin 2, 4
+SoftwareSerial   mySerial(3, 4);            //Setting RX, TX on pin 3, 4
 
 int const   RPin    =   12;                 //Digital Pin for Red component of RGB LED
 int const   GPin    =   13;                 //Digital Pin for Green component of RGB LED
-int const   BPin    =   10;                 //Digital Pin for Blue component of RGB LED
+int const   BPin    =   9;                  //Digital Pin for Blue component of RGB LED $$$$$$10
 
 int   pinCalib;                             //enable calibration
 //int pinTBD;
@@ -66,9 +66,13 @@ boolean   isOtherLock   =   0;
 
 int   swCount0, swCount1, swCount2, swCount3   =   0;   //pushbutton troubleshooting counters
 
-unsigned long   previousMillis    =   0;                //Previous time for blocking
-unsigned long   currentMillis     =   0;                //Current time for blocking
-const long    interval    =   3000;                     //Checking interval for blocking
+unsigned long   previousBlock    =   0;                //Previous time for blocking
+unsigned long   currentBlock     =   0;                //Current time for blocking
+unsigned long   previousInact    =   0;                //Previous time for inactivity
+unsigned long   currentInact     =   0;                //Current time for inactivity
+const long    intBlock    =   3000;                    //Checking interval for blocking
+const long    intInact    =   15000;                   //Checking interval for inactivity
+const int   thresholdInact   =   20;                   //Inactivity threshold
 
 int   sensorValue   =   0;                              //value read from the sensor
 int   sensorMax     =   1024;                           //upper bound 
@@ -117,8 +121,8 @@ void setup(){
     outOtherOpen = outOtherMin; outOtherClose = outOtherMax;
   }
   
-  servoIndex.attach(3);         //index servo
-  servoOther.attach(5);         //other servo
+  servoIndex.attach(2);         //index servo
+  servoOther.attach(5);         //other servo $$$$$$$5
   servoThumb.attach(6);         //thumb servo
   
   pinMode(pinCalib, INPUT);     //A6
@@ -204,20 +208,20 @@ void loop(){
  
     sensorValue = readSensor();
     delay(25);
-
+    int comp = (sensorMax - sensorMin)/2;
     //LED contraction strength indicator
     //Low
-    if((sensorValue >= 0) && (sensorValue < 300)){
+    if((sensorValue >= sensorMin + 2*comp)){
       //Displaying Red LED
       colorLED('R');
     }
     //Medium
-    else if((sensorValue >= 300) && (sensorValue < 800)){
+    else if((sensorValue >= sensorMin + comp) && (sensorValue < sensorMin + 2*comp)){
       //Displaying Green LED
       colorLED('G');
     }
     //High
-    else if(sensorValue >= 800){
+    else if(sensorValue <= sensorMin + comp){
       //Displaying Blue LED
       colorLED('B');
     }
@@ -233,12 +237,24 @@ void loop(){
       outOther = map(position, positionMin, positionMax, outOtherOpen, outOtherClose);
       servoOther.write(outOther);
     }
-    if(isThumbOpen) servoThumb.write(outThumbOpen);
-    else servoThumb.write(outThumbClose);  
+    if(isThumbOpen){
+      while(outThumb != outThumbOpen){
+        outThumb ++;
+        servoThumb.write(outThumb);
+        delay(10);
+      }
+    } 
+    else{
+      while(outThumb != outThumbClose){
+        outThumb --;
+        servoThumb.write(outThumb);
+        delay(10);
+      }
+    } 
     if(onSerial) serialMonitor();
 
     vocalBlocking();
-    
+    inactivity();
   } 
 }
 
@@ -257,7 +273,7 @@ int readSensor() {
     sval   +=   analogRead(pinSensor);
   }
   sval   =   sval/10;
-  sval2 = map(sval,0,1023,1023,0);
+  sval2 = map(analogRead(pinSensor),0,1023,1023,0);
   return sval2;
 }
 
@@ -289,6 +305,7 @@ void sensorToPosition(){
 // Parameters : NONE
 void calibration() {
   //going to default position
+  colorLED('G');
   outIndex    =   outIndexOpen;
   servoIndex.write(outIndexOpen);
   servoOther.write(outOtherOpen);
@@ -372,10 +389,10 @@ void vocalBlocking(){
     //Checking for "OK EXIII" command
     if(com == 0x11){    
       colorLED('P');
-      timeReset();
+      timeResetBlock();
       //Checking if the interval is overpassed or if "DÉBLOQUE" has been said
-      while((currentMillis - previousMillis < interval) && (com != 0x15)){
-        currentMillis   =   millis();
+      while((currentBlock - previousBlock < intBlock) && (com != 0x15)){
+        currentBlock   =   millis();
         com   =   mySerial.read();
 
         switch(com){
@@ -411,7 +428,7 @@ void vocalBlocking(){
           break;    
         }
       }
-      timeReset();
+      timeResetBlock();
     }
   }
 }
@@ -422,14 +439,14 @@ void vocalBlocking(){
 // Parameters : NONE
 void blocking(){
   while(com != 0x15){
-    timeReset();    
+    timeResetBlock();    
     com   =   mySerial.read();
     
     if(com == 0x11){
       colorLED('P');     
       
-      while((currentMillis - previousMillis < interval) && (com != 0x15)){        
-        currentMillis   =   millis();
+      while((currentBlock - previousBlock < intBlock) && (com != 0x15)){        
+        currentBlock   =   millis();
         com   =   mySerial.read();
       }
       colorLED('N');    
@@ -440,14 +457,24 @@ void blocking(){
   }
 }
 
-// ====================  void timeReset()  ======================
+// ==================  void timeResetBlock()  ====================
 /* Description : time reset related to the check of the time
- *               interval.
+ *               interval for blocking.
 */
 // Parameters : NONE
-void timeReset(){
-  currentMillis   =   millis();
-  previousMillis  =   currentMillis;
+void timeResetBlock(){
+  currentBlock   =   millis();
+  previousBlock  =   currentBlock;
+}
+
+// ==================  void timeResetInact()  ====================
+/* Description : time reset related to the check of the time
+ *               interval for inactivity.
+*/
+// Parameters : NONE
+void timeResetInact(){
+  currentInact   =   millis();
+  previousInact  =   currentInact;
 }
 
 // ===============  void colorLED(char color)  ==================
@@ -477,7 +504,7 @@ void colorLED(char color){
     case 'P': //PURPLE
       analogWrite(RPin, 254);
       analogWrite(GPin, 254);
-      analogWrite(BPin, 0254);
+      analogWrite(BPin, 254);
     break;
     case 'N': //NONE
       analogWrite(RPin, 0);
@@ -485,4 +512,35 @@ void colorLED(char color){
       analogWrite(BPin, 0);
     break;
   }
+}
+
+// ==================  void inactivity()  ====================
+/* Description : checking for inactivity in order to detach
+ *               and save servos' lifetime
+*/
+// Parameters : NONE
+void inactivity(){
+  if(sensorValue > sensorMax - thresholdInact){
+    currentInact = millis();
+    
+    if(currentInact - previousInact > intInact){
+      timeResetInact();
+      servoIndex.detach();         
+      servoOther.detach();         
+      servoThumb.detach();
+               
+      if(onSerial) Serial.println("Servos Detached");
+      
+      while(sensorValue > sensorMax - thresholdInact){
+        sensorValue = readSensor();
+      }
+      
+      servoIndex.attach(2);         
+      servoOther.attach(5);         
+      servoThumb.attach(6);
+               
+      if(onSerial) Serial.println("Servos Attached");
+    }
+  }
+  else timeResetInact();
 }
