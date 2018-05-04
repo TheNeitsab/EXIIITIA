@@ -138,7 +138,7 @@ void setup(){
   pinMode(BPin, OUTPUT);        //Set Blue component pin of RGB LED
 
   if(onSerial) Serial.println("Starting Setup");
-  //Setting the module in Compact Mode
+  //Setting the voice module in Compact Mode
   mySerial.write(0xAA);
   mySerial.write(0x37);
   if(onSerial) Serial.println("Compact Mode OK");
@@ -208,7 +208,9 @@ void loop(){
  
     sensorValue = readSensor();
     delay(25);
-    int comp = (sensorMax - sensorMin)/2;
+
+    //____________________PARTIE À AMÉLIORER_______________________ 
+    int comp = (sensorMax - sensorMin)/2;   //Generic parameter to set the sensitivity interval
     //LED contraction strength indicator
     //Low
     if((sensorValue >= sensorMin + 2*comp)){
@@ -225,7 +227,7 @@ void loop(){
       //Displaying Blue LED
       colorLED('B');
     }
-  
+    //_____________________________________________________________ 
     //boundaries checking
     if(sensorValue<sensorMin) sensorValue=sensorMin;
     else if(sensorValue>sensorMax) sensorValue=sensorMax;
@@ -241,7 +243,7 @@ void loop(){
       while(outThumb != outThumbOpen){
         outThumb ++;
         servoThumb.write(outThumb);
-        delay(10);
+        delay(10); 
       }
     } 
     else{
@@ -266,7 +268,7 @@ void loop(){
 // Description : getting sensor's value making an average over a 10
 //               values buffer to avoid any flickering
 
-// Parameters : OUT -> returns the averaged value
+// Parameters : OUT -> sval2 : returns the averaged value
 int readSensor() {
   int i, sval, sval2;
   for(i = 0; i < 10; i++) {
@@ -305,7 +307,7 @@ void sensorToPosition(){
 // Parameters : NONE
 void calibration() {
   //going to default position
-  colorLED('G');
+  colorLED('G');                  //Lighting RGB LED in GREEN
   outIndex    =   outIndexOpen;
   servoIndex.write(outIndexOpen);
   servoOther.write(outOtherOpen);
@@ -388,7 +390,7 @@ void vocalBlocking(){
     
     //Checking for "OK EXIII" command
     if(com == 0x11){    
-      colorLED('P');
+      colorLED('P');      //Lighting RGB LED in PURPLE
       timeResetBlock();
       //Checking if the interval is overpassed or if "DÉBLOQUE" has been said
       while((currentBlock - previousBlock < intBlock) && (com != 0x15)){
@@ -399,7 +401,7 @@ void vocalBlocking(){
           
           //Checking for "BLOQUE OUVERT" command
           case 0x12:  
-            colorLED('N');   
+            colorLED('N');                    //Switching the RGB LED OFF
             servoIndex.write(outIndexOpen);
             servoOther.write(outOtherOpen);
             servoThumb.write(outThumbOpen);
@@ -409,7 +411,7 @@ void vocalBlocking(){
           
           //Checking for "BLOQUE FERMÉ" command
           case 0x13:
-            colorLED('N');           
+            colorLED('N');                    //Switching the RGB LED OFF          
             servoIndex.write(outIndexClose);
             servoOther.write(outOtherClose);
             servoThumb.write(outThumbClose);
@@ -419,7 +421,7 @@ void vocalBlocking(){
           
           //Checking for "BLOQUE EN POSITION" command
           case 0x14:  
-            colorLED('N');
+            colorLED('N');                    //Switching the RGB LED OFF
             servoIndex.write(outIndex);
             servoOther.write(outOther);
             servoThumb.write(outThumbOpen);
@@ -443,13 +445,13 @@ void blocking(){
     com   =   mySerial.read();
     
     if(com == 0x11){
-      colorLED('P');     
+      colorLED('P');    //Lighting RGB LED in PURPLE
       
       while((currentBlock - previousBlock < intBlock) && (com != 0x15)){        
         currentBlock   =   millis();
         com   =   mySerial.read();
       }
-      colorLED('N');    
+      colorLED('N');    //Switching the RGB LED OFF
     }
     else{
       com = 0x00;
