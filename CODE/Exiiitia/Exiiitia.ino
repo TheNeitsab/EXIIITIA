@@ -76,7 +76,7 @@ const int   thresholdInact   =   20;                   //Inactivity threshold
 
 int   sensorValue   =   0;                              //value read from the sensor
 int   sensorMax     =   1024;                           //upper bound 
-int   sensorMin     =   0;                              //lower bound $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$254
+int   sensorMin     =   0;                              //lower bound
 int   speed         =   0;
 int   position      =   0;
 
