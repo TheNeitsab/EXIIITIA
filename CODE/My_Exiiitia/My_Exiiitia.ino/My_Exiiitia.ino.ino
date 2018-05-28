@@ -125,6 +125,8 @@ boolean  checkTEST = false;
 int const   pinR   =   12;    //RED          
 int const   pinG   =   13;    //GREEN       
 int const   pinB   =   9;     //BLUE
+//different kinds of colors available for colorLED function
+enum COLOR {RED, GREEN, BLUE, PURPLE, NONE};
      
 //digital pins for pushbuttons
 int   pinCalib;    //enable calibration
@@ -328,7 +330,7 @@ void sensorToPosition(){
 // Parameters : NONE
 void calibration() {
   DEBUG_PRINT("======calibration start======");
-  colorLED('G');    //Lighting RGB LED in GREEN
+  colorLED(GREEN);    //Lighting RGB LED in GREEN
 
   sensorMin = 1024;
   sensorMax = 0;
@@ -356,40 +358,39 @@ void calibration() {
 
     DATA_DEBUG();
   }
-  colorLED('B');
+  colorLED(BLUE);
   DEBUG_PRINT("======calibration finish======");
 }
 
-// ===============  void colorLED(char color)  ==================
+// ===============  void colorLED(COLOR color)  ==================
 /* Description : setting the RGB LED to the according color passed
  *               to the function.
 */
-// Parameters : char color -> character representing the first
-//                            letter of the color.
+// Parameters : COLOR color -> enum of the available colors
 
-void colorLED(char color){
+void colorLED(COLOR color){
   switch(color){
-    case 'R': //RED
+    case RED: //RED
       analogWrite(pinR, 254);
       analogWrite(pinG, 0);
       analogWrite(pinB, 0);
     break;
-    case 'G': //GREEN
+    case GREEN: //GREEN
       analogWrite(pinR, 0);
       analogWrite(pinG, 254);
       analogWrite(pinB, 0);
     break;
-    case 'B': //BLUE
+    case BLUE: //BLUE
       analogWrite(pinR, 0);
       analogWrite(pinG, 0);
       analogWrite(pinB, 254);
     break;
-    case 'P': //PURPLE
+    case PURPLE: //PURPLE
       analogWrite(pinR, 254);
       analogWrite(pinG, 254);
       analogWrite(pinB, 254);
     break;
-    case 'N': //NONE
+    case NONE: //NONE
       analogWrite(pinR, 0);
       analogWrite(pinG, 0);
       analogWrite(pinB, 0);
