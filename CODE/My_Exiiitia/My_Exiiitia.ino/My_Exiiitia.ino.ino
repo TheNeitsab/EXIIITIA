@@ -1,6 +1,6 @@
 // ================================================================
 // ===                      ARDUINO CODE                        ===
-// ===                        EXIIITIA                          ===
+// ===                      My_Exiitia_V2                       ===
 // ================================================================
 
 // ================================================================
@@ -30,20 +30,36 @@
 
 // ==========================  INCLUDES  ==========================
 
-#include <VarSpeedServo.h>    //library managing servos' behavior
-#include <SoftwareSerial.h>   //Used to emulate Serial ports on other pins
+#include <VarSpeedServo.h>    //managing servos' behavior
+#include <SoftwareSerial.h>   //emulating Serial ports on other pins
+#include <ExtiaCounter.h>     //managing timers/counters
 
 // =====================  SOFTWARE SETTINGS  ======================
+//#define DEBUG
+
+#ifdef DEBUG
+ #define DEBUG_PRINT(x) { Serial.println (x); }
+ #define DATA_DEBUG() {  Serial.print("Min="); Serial.print(sensorMin); \
+                            Serial.print(",Max="); Serial.print(sensorMax); \
+                            Serial.print(",Sensor="); Serial.print(sensorValue); \
+                            Serial.print(",Speed="); Serial.print(speed); \
+                            Serial.print(",Position="); Serial.print(position); \
+                            Serial.print(",OutIndex="); Serial.print(outIndex); \
+                            Serial.print(",isThumbOpen="); Serial.print(isThumbOpen); \
+                            Serial.print(",isOtherLock="); Serial.println(isOtherLock); }
+#else
+ #define DEBUG_PRINT(x)
+ #define DATA_DEBUG()
+#endif
 
 //shifumi game switch values
-#define   ROCK      1
-#define   PAPER     2
-#define   SCISSORS  3
+const int   ROCK     =  0;
+const int   PAPER    =  1;
+const int   SCISSORS =  2;
 
 //state checking booleans
 //const settings
 const boolean   isRight     =   0;    //arm's/hand's position => right:1 | left:0
-const boolean   onSerial    =   1;    //enabling Serial command
 //variables
 boolean   isThumbOpen   =   1;
 boolean   isOtherLock   =   0;
@@ -84,11 +100,10 @@ int   sensorMax     =   0;          //upper bound
 int   sensorMin     =   1024;       //lower bound
 
 //communication data for vocal recognition module
-byte   com  =  0;
+//byte   com  =  0;
 
 //inactivity checking parameters
-int   thresholdInact   =   50;      //position threshlod
-int   countInact       =    0;      //inactivity counter
+int   thresholdInact   =   70;      //position threshold
 
 // =====================  HARDWARE SETTINGS  ======================
 //servos' definition
@@ -99,6 +114,13 @@ VarSpeedServo   servoThumb;   //thumb
 //setting vocal module serial communication : RX, TX on pin 3, 4
 SoftwareSerial   mySerial(3, 4);    
 
+//counters' definition
+ExtiaCounter  Calib;
+volatile boolean  checkCalib = false;
+ExtiaCounter  Inact;
+volatile boolean  checkInact = false;
+ExtiaCounter  TEST;
+boolean  checkTEST = false;
 //digital pins for RGB components of RGB LED
 int const   pinR   =   12;    //RED          
 int const   pinG   =   13;    //GREEN       
@@ -115,6 +137,8 @@ int   countCalib, countThumb, countOther, countGame = 0;
 //sensor's input pin
 int   pinSensor = A0;              
 
+int const pinCheck = 10;
+
 // ================================================================
 // ===                      INITIAL SETUP                       ===
 // ================================================================
@@ -126,6 +150,9 @@ void setup(){
   servoIndex.attach(2);   //index servo
   servoOther.attach(5);   //other servo
   servoThumb.attach(6);   //thumb servo
+
+  Calib.setCounter(0,4000,callbackCalib);
+  Inact.setCounter(1,5000,callbackInact);
   
 // ===================  PINS & OUT DEFINITIONS  ===================
   if(isRight){
@@ -156,22 +183,25 @@ void setup(){
   
   pinMode(pinR, OUTPUT);        
   pinMode(pinG, OUTPUT);        
-  pinMode(pinB, OUTPUT);    
+  pinMode(pinB, OUTPUT);   
+
+  pinMode(pinCheck, OUTPUT);
+  digitalWrite(pinCheck, LOW);
   
 // ===================  VOICE MODULE INIT  ===================
-  if(onSerial) Serial.println("Starting Setup");
+  DEBUG_PRINT("Starting Setup");
   //Setting the voice module in Compact Mode
   mySerial.write(0xAA);
   mySerial.write(0x37);
-  if(onSerial) Serial.println("Compact Mode OK");
+  DEBUG_PRINT("Compact Mode OK");
   
   delay(2000);
   
   //Importing Group1 vocal commands
   mySerial.write(0xAA);
   mySerial.write(0x21);
-  if(onSerial) Serial.println("Group 1 imported");
-  if(onSerial) Serial.println("Setup is done !");
+  DEBUG_PRINT("Group 1 imported");
+  DEBUG_PRINT("Setup is done !");
 }
 
 // ================================================================
@@ -180,14 +210,14 @@ void setup(){
 
 void loop() {
 // ========================  CALIBRATION  =========================
-  if(onSerial) Serial.println("======Waiting for Calibration======");
+  DEBUG_PRINT("======Waiting for Calibration======");
   while(1){
     //holding open position waiting for calibration
     servoIndex.write(outIndexOpen);
     servoOther.write(outOtherOpen);
     servoThumb.write(outThumbOpen);
     
-    if(onSerial) serialMonitor();
+    DATA_DEBUG();
     delay(10);
     
     if(digitalRead(pinCalib) == LOW){
@@ -195,24 +225,30 @@ void loop() {
       break;
     }
   }
-   
+
 // =======================  MANUAL CONTROLS  ======================
   //buttons state checking
-  while(1){
-    if(digitalRead(pinCalib) == LOW) countCalib += 1;
+  while(1){    
+    if(digitalRead(pinCalib) == LOW) { 
+      countCalib += 1;
+    }
     else countCalib = 0;
     if(countCalib == 10) {
       countCalib   =   0;
       calibration();
     }
-    if(digitalRead(pinThumb) == LOW) countThumb += 1;
+    if(digitalRead(pinThumb) == LOW) { 
+      countThumb += 1;
+    }
     else countThumb = 0;
     if(countThumb == 10) {
       countThumb    =   0;
       isThumbOpen =   !isThumbOpen;
       while (digitalRead(pinThumb) == LOW) delay(1);
     }
-    if(digitalRead(pinOther) == LOW) countOther += 1;
+    if(digitalRead(pinOther) == LOW) {
+      countOther += 1;
+    }
     else countOther   =   0;
     if(countOther == 10) {
       countOther    =   0;
@@ -223,7 +259,7 @@ void loop() {
 // =====================  HAND'S BEHAVIOUR  =======================  
     sensorValue = readSensor();   //getting current sensor value
     delay(25);
-
+    
     //borders overpass checking
     if(sensorValue < sensorMin) sensorValue = sensorMin;
     else if(sensorValue > sensorMax) sensorValue = sensorMax;
@@ -242,11 +278,13 @@ void loop() {
     if(isThumbOpen)  servoThumb.write(outThumbOpen, 30); 
     else servoThumb.write(outThumbClose, 30);
     
-    if(onSerial) serialMonitor();
-
-    visualStrength();
+    DATA_DEBUG();
+    
+    visualStrength(); 
     inactivity();    
-    shifumiGame();
+    //shifumiGame();
+    troubleshooting();
+                    //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Timer blocage vocal
   }
 }
 
@@ -289,13 +327,16 @@ void sensorToPosition(){
 
 // Parameters : NONE
 void calibration() {
-  if(onSerial) Serial.println("======calibration start======");
+  DEBUG_PRINT("======calibration start======");
   colorLED('G');    //Lighting RGB LED in GREEN
 
-  int count = 0;
+  sensorMin = 1024;
+  sensorMax = 0;
+  checkCalib = false;
+  Calib.startCounter(0);
 
   //starting the calibration process
-  while(count < 250) {
+  while(!checkCalib) {
     sensorValue = readSensor();   //getting current sensor value
     delay(25);
 
@@ -313,26 +354,10 @@ void calibration() {
     outIndex   =   map(position, positionMin, positionMax, outIndexOpen, outIndexClose);    
     servoIndex.write(outIndex, 100);
 
-    count++;
-    if(onSerial) serialMonitor();
+    DATA_DEBUG();
   }
-  if(onSerial)  Serial.println("======calibration finish======");
-}
-
-// ===================  void serialMonitor()  ====================
-// Description : troublehsooting/debugging function using Arduino
-//               serial monitor.
-
-// Parameters : NONE
-void serialMonitor(){
-  Serial.print("Min="); Serial.print(sensorMin);
-  Serial.print(",Max="); Serial.print(sensorMax);
-  Serial.print(",Sensor="); Serial.print(sensorValue);
-  Serial.print(",Speed="); Serial.print(speed);
-  Serial.print(",Position="); Serial.print(position);
-  Serial.print(",OutIndex="); Serial.print(outIndex);
-  Serial.print(",isThumbOpen="); Serial.print(isThumbOpen);
-  Serial.print(",isOtherLock="); Serial.println(isOtherLock);
+  colorLED('B');
+  DEBUG_PRINT("======calibration finish======");
 }
 
 // ===============  void colorLED(char color)  ==================
@@ -397,23 +422,29 @@ void visualStrength(){
 */
 // Parameters : NONE
 void inactivity(){
-  if(sensorValue < sensorMin + thresholdInact) countInact += 1;
-    else countInact   =   0;
-    if(countInact == 300) {
-      countInact    =   0;
-      
-      servoIndex.detach();         
-      servoOther.detach();         
-      servoThumb.detach();
-      if(onSerial) Serial.println("Servos Detached");
-      
-      while(sensorValue < sensorMin + thresholdInact) sensorValue = readSensor();
-
-      servoIndex.attach(2);         
-      servoOther.attach(5);         
-      servoThumb.attach(6);            
-      if(onSerial) Serial.println("Servos Attached");
+  if(sensorValue < sensorMin + thresholdInact) {
+    Inact.startCounter(1);
+  }
+  else {
+    Inact.resetCounter(1);
+    checkInact = false;
+  }
+  if(checkInact) {  
+    colorLED('P');
+    servoIndex.detach();         
+    servoOther.detach();         
+    servoThumb.detach();
+    DEBUG_PRINT("Servos Detached");
+    
+    while(sensorValue < sensorMin + thresholdInact) {
+      sensorValue = readSensor();
     }
+    colorLED('N');
+    servoIndex.attach(2);         
+    servoOther.attach(5);         
+    servoThumb.attach(6);            
+    DEBUG_PRINT("Servos Attached");
+  }
 }
 
 // ===================  shifumiGame()  ====================
@@ -430,12 +461,12 @@ void shifumiGame(){
       countGame    =   0;
       colorLED('P');
 
-      if(onSerial)  Serial.println("Sarting SHIFUMI !!");
-      int shifumi = random(1,4);
+      DEBUG_PRINT("Sarting SHIFUMI !!");
+      int shifumi = random(0,3);
 
       switch(shifumi){
         case ROCK :
-          if(onSerial)  Serial.println("ROCK");
+          DEBUG_PRINT("ROCK");
           servoIndex.write(outIndexClose);
           servoOther.write(outOtherClose);
           servoThumb.write(outThumbClose);
@@ -443,14 +474,14 @@ void shifumiGame(){
           delay(15);                        
           break;
         case PAPER :
-          if(onSerial)  Serial.println("PAPER");
+          DEBUG_PRINT("PAPER");
           servoIndex.write(outIndexOpen);
           servoOther.write(outOtherOpen);
           servoThumb.write(outThumbOpen);
           delay(15);                        
           break;
         case SCISSORS :
-          if(onSerial)  Serial.println("SCISSORS");
+          DEBUG_PRINT("SCISSORS");
           servoIndex.write(outIndexOpen);
           servoOther.write(outOtherClose);
           servoThumb.write(outThumbOpen);
@@ -468,97 +499,31 @@ void shifumiGame(){
           break;
         }
       }
-      if(onSerial)  Serial.println("End of the game !");
+      DEBUG_PRINT("End of the game !");
     }
 }
 
-// ===================  void vocalBlocking()  =====================
-/* Description : (un)blocking the hand thanks to vocal recognition.
- *               In order to initialize the blocking process, you
- *               must say "OK EXIII". This will automatically block 
- *               in current position for 3 seconds waiting for one 
- *               of the following available orders :
- *               - "BLOQUE OUVERT" : blocks the hand in OPEN position
- *               - "BLOQUE FERMÉ"  : blocks the hand in CLOSED position
- *               - "BLOQUE EN POSITION" : blocks the hand in current position
- *               After 3 seconds without any correct, the system is
- *               unblocked.
- *               In order to unblock it after blocking in one of
- *               the previous positions, you must say "DÉBLOQUE".
-*/
-// Parameters : NONE
-void vocalBlocking(){
-  //Checking if something has been received
-  if (mySerial.available()){
-    com   =   mySerial.read();              //Storing the received data
-    
-    //Checking for "OK EXIII" command
-    if(com == 0x11){    
-      colorLED('P');      //Lighting RGB LED in PURPLE
-      int count = 0;
-      //Checking if the interval is overpassed or if "DÉBLOQUE" has been said
-      while((count < 200) && (com != 0x15)){
-        count++;
-        com   =   mySerial.read();
+// ===================  void troubleshooting()  ===================
+// Description : bypassing gemma behavior while a servo is moving
+//               to avoid any NeoPixel flickering
 
-        switch(com){
-          
-          //Checking for "BLOQUE OUVERT" command
-          case 0x12:  
-            colorLED('N');                    //Switching the RGB LED OFF
-            servoIndex.write(outIndexOpen);
-            servoOther.write(outOtherOpen);
-            servoThumb.write(outThumbOpen);
-            delay(15);                        //Allow time for servo to change position
-            blocking();      
-          break;
-          
-          //Checking for "BLOQUE FERMÉ" command
-          case 0x13:
-            colorLED('N');                    //Switching the RGB LED OFF          
-            servoIndex.write(outIndexClose);
-            servoOther.write(outOtherClose);
-            servoThumb.write(outThumbClose);
-            delay(15);                        //Allow time for servo to change position 
-            blocking();          
-          break;
-          
-          //Checking for "BLOQUE EN POSITION" command
-          case 0x14:  
-            colorLED('N');                    //Switching the RGB LED OFF
-            servoIndex.write(outIndex);
-            servoOther.write(outOther);
-            servoThumb.write(outThumbOpen);
-            delay(15);                        //Allow time for servo to change position
-            blocking();                    
-          break;    
-        }
-      }
-      count = 0;
-    }
-  }
-}
-
-// =====================  void blocking()  =======================
-/* Description : blocking loop
-*/
 // Parameters : NONE
-void blocking(){
-  while(com != 0x15){       
-    com   =   mySerial.read();
-    int count = 0;
-    
-    if(com == 0x11){
-      colorLED('P');    //Lighting RGB LED in PURPLE
-      
-      while((count < 200) && (com != 0x15)){        
-        count++;
-        com   =   mySerial.read();
-      }
-      colorLED('N');    //Switching the RGB LED OFF
+void troubleshooting(){
+  if(servoIndex.isMoving() || servoThumb.isMoving() || servoOther.isMoving() || (sensorValue >= sensorMin + 10)){
+      digitalWrite(pinCheck, HIGH);      
     }
     else{
-      com = 0x00;
+      digitalWrite(pinCheck, LOW);
     }
-  }
 }
+
+void callbackCalib(){
+  checkCalib = true;
+  Calib.resetCounter(0);
+}
+
+void callbackInact(){
+  checkInact = true;
+  Inact.resetCounter(1);
+}
+

@@ -27,6 +27,7 @@
 #define   NeoNb     4
 
 #define   BatPin    1
+#define   CheckPin  1
 
 const double    Full    =   8.4;
 const double    High    =   8.1;
@@ -36,7 +37,6 @@ const double    Low     =   6.3;
 const int   interval      =   500;
 double    currentMillis   =   0;
 double    previousMillis  =   0;
-bool    check             =   true;
 
 Adafruit_NeoPixel Neo = Adafruit_NeoPixel(NeoNb, NeoPin, NEO_GRB + NEO_KHZ800);
 
@@ -46,6 +46,8 @@ Adafruit_NeoPixel Neo = Adafruit_NeoPixel(NeoNb, NeoPin, NEO_GRB + NEO_KHZ800);
 
 void setup() {
   pinMode(BatPin, INPUT);
+  pinMode(CheckPin, INPUT);
+  digitalWrite(CheckPin, LOW);
   Neo.begin();
 }
 
@@ -59,53 +61,34 @@ void loop() {
   double    BatVolt3  =   mapf(BatVal, 0, 1023, 0, 3.3);  //Mapping it to 0. - 3.3 Volts
   double    BatVolt   =   mapf(BatVolt3, 0, 3.3, 0, 8.5);   //Mapping it to 0. - 8.5 Volts
 
-  //State indication
-  if(BatVolt > Full){
-    Neo.setPixelColor(0, Neo.Color(0,20,0)); 
-    Neo.setPixelColor(1, Neo.Color(0,20,0)); 
-    Neo.setPixelColor(2, Neo.Color(0,20,0)); 
-    Neo.setPixelColor(3, Neo.Color(0,20,0)); 
-  }
-  else if((BatVolt >= High) && (BatVolt < Full)){
-    Neo.setPixelColor(0, Neo.Color(0,0,20)); 
-    Neo.setPixelColor(1, Neo.Color(0,0,20)); 
-    Neo.setPixelColor(2, Neo.Color(0,0,20)); 
-    Neo.setPixelColor(3, Neo.Color(0,0,0)); 
-  }
-  else if((BatVolt >= Mid) && (BatVolt < High)){
-    Neo.setPixelColor(0, Neo.Color(20,5,0)); 
-    Neo.setPixelColor(1, Neo.Color(20,5,0)); 
-    Neo.setPixelColor(2, Neo.Color(0,0,0)); 
-    Neo.setPixelColor(3, Neo.Color(0,0,0)); 
-  }
-  else if((BatVolt >= Low) && (BatVolt < Mid)){
-    Neo.setPixelColor(0, Neo.Color(20,0,0)); 
-    Neo.setPixelColor(1, Neo.Color(0,0,0)); 
-    Neo.setPixelColor(2, Neo.Color(0,0,0)); 
-    Neo.setPixelColor(3, Neo.Color(0,0,0)); 
-  }
-  else{
-    currentMillis = millis();
-    if(currentMillis - previousMillis > interval){
-      currentMillis   =   millis();
-      previousMillis  =   currentMillis;
-      check = !check;
+  if(digitalRead(CheckPin) != HIGH){
+    //State indication
+    if(BatVolt > Full){
+      Neo.setPixelColor(0, Neo.Color(0,20,0)); 
+      Neo.setPixelColor(1, Neo.Color(0,20,0)); 
+      Neo.setPixelColor(2, Neo.Color(0,20,0)); 
+      Neo.setPixelColor(3, Neo.Color(0,20,0)); 
     }
-    if(check){
+    else if((BatVolt >= High) && (BatVolt < Full)){
+      Neo.setPixelColor(0, Neo.Color(0,0,20)); 
+      Neo.setPixelColor(1, Neo.Color(0,0,20)); 
+      Neo.setPixelColor(2, Neo.Color(0,0,20)); 
+      Neo.setPixelColor(3, Neo.Color(0,0,0)); 
+    }
+    else if((BatVolt >= Mid) && (BatVolt < High)){
+      Neo.setPixelColor(0, Neo.Color(20,5,0)); 
+      Neo.setPixelColor(1, Neo.Color(20,5,0)); 
+      Neo.setPixelColor(2, Neo.Color(0,0,0)); 
+      Neo.setPixelColor(3, Neo.Color(0,0,0)); 
+    }
+    else if((BatVolt >= Low) && (BatVolt < Mid)){
       Neo.setPixelColor(0, Neo.Color(20,0,0)); 
-      Neo.setPixelColor(1, Neo.Color(20,0,0)); 
-      Neo.setPixelColor(2, Neo.Color(20,0,0)); 
-      Neo.setPixelColor(3, Neo.Color(20,0,0)); 
-    }
-    else{
-      Neo.setPixelColor(0, Neo.Color(0,0,0)); 
       Neo.setPixelColor(1, Neo.Color(0,0,0)); 
       Neo.setPixelColor(2, Neo.Color(0,0,0)); 
-      Neo.setPixelColor(3, Neo.Color(0,0,0));
-    }
+      Neo.setPixelColor(3, Neo.Color(0,0,0)); 
+    }   
+    Neo.show();
   }
-  
-  Neo.show();
 }
 
 // ================================================================
