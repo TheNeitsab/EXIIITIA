@@ -13,7 +13,7 @@ int ExtiaCounter::s_counterDuration[MAX_COUNTER];
 // Callback on counter tick
 void (*ExtiaCounter::s_counterCallback[MAX_COUNTER])(void);
 // Counter state of execution (TRUE is ongoing while FALSE is stopped)
-bool ExtiaCounter::s_counterState[MAX_COUNTER];
+volatile bool ExtiaCounter::s_counterState[MAX_COUNTER];
 
 
 // ====== End if statics declarations ======
@@ -28,7 +28,7 @@ bool ExtiaCounter::s_counterState[MAX_COUNTER];
  * @arg callback: the callback to be called when counter reach duration
  *
  * @return: true if the counter is correctly initialized and started, false
- *          otherwhise
+ *          otherwise
  */
 bool ExtiaCounter::setCounter(unsigned int counter, unsigned int duration, void (*callback)())
 {
@@ -44,12 +44,12 @@ bool ExtiaCounter::setCounter(unsigned int counter, unsigned int duration, void 
 }
 
 /*
- * Deactivate a counter
+ * Deactivate and reset a counter
  *
  * @arg counter: the counter to deactivate (must be between 0 and MAX_COUNTER - 1).
  *               @note if the counter is already deactivated, nothing will happen.
  *
- * @return: true if the counter passed in parameter is valid, false otherwhise
+ * @return: true if the counter passed in parameter is valid, false otherwise
  */
 bool ExtiaCounter::resetCounter(unsigned int counter)
 {
@@ -57,7 +57,7 @@ bool ExtiaCounter::resetCounter(unsigned int counter)
 		return false;
 
 	ExtiaCounter::s_counterCurrentMillis[counter] = 0;
-	s_counterState[counter] = false;
+	ExtiaCounter::s_counterState[counter] = false;
 }
 
 /*
@@ -101,10 +101,10 @@ ExtiaCounter::ExtiaCounter()
 }
 
 /*
- * Returns the number of milliseconds since the library instancation
+ * Returns the number of milliseconds since the library instantiation
  * been created.
  *
- * @return the number of milliseconds since the library instancation
+ * @return the number of milliseconds since the library instantiation
  */
 unsigned long ExtiaCounter::millis()
 {
@@ -112,18 +112,33 @@ unsigned long ExtiaCounter::millis()
 }
 
 /*
- * Starts counter execution
+ * Pauses counter execution
  *
- * @return the number of milliseconds since the library instancation
+ * @return nothing
  */
 void ExtiaCounter::pauseCounter(unsigned int counter)
 {
     s_counterState[counter] = false;
 }
 
+/*
+ * Starts counter execution
+ *
+ * @return nothing
+ */
 void ExtiaCounter::startCounter(unsigned int counter)
 {
     s_counterState[counter]= true;
+}
+
+/*
+ * Checks whether the counter is running or not
+ *
+ * @return the current state of the counter
+ */
+bool ExtiaCounter::isRunning(unsigned int counter)
+{
+    return s_counterState[counter];
 }
 
 // Interruption routine
@@ -139,7 +154,8 @@ ISR(TIMER1_OVF_vect)
             if (ExtiaCounter::s_counterCallback[i] != 0) { // Is a callback attached ? If not, do not bother and do nothing.
                 ExtiaCounter::s_counterCurrentMillis[i]++;
                 if (ExtiaCounter::s_counterCurrentMillis[i] > ExtiaCounter::s_counterDuration[i]) {
-                    ExtiaCounter::s_counterCurrentMillis[i] = 0; // Reset counter and
+                    ExtiaCounter::s_counterCurrentMillis[i] = 0;
+                    ExtiaCounter::s_counterState[i] = false;
                     (*ExtiaCounter::s_counterCallback[i])();	   // execute callback
                 }
             }

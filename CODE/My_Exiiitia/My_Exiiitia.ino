@@ -1,6 +1,6 @@
 // ================================================================
 // ===                      ARDUINO CODE                        ===
-// ===                      My_Exiitia_V2                       ===
+// ===                       My_Exiitia                         ===
 // ================================================================
 
 // ================================================================
@@ -8,7 +8,7 @@
 // ================================================================
 
 /*
- * Arduino micro code for Exiiitia.
+ * Arduino micro code for Exiiitia Version 2.0
  * Inspired by the one created by exiii Inc.
 
  * Copyright (c) 2018 Bastien GABRIELLI

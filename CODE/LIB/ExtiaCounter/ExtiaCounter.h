@@ -1,5 +1,3 @@
-// Insert some headers here
-
 #ifndef EXTIA_COUNTER_H_
 #define EXTIA_COUNTER_H_
 
@@ -20,6 +18,7 @@ public:
 	bool resetCounter(unsigned int counter);
 	void startCounter(unsigned int counter);
 	void pauseCounter(unsigned int counter);
+	bool isRunning(unsigned int counter);
 	unsigned long millis();
 
 	friend void ::TIMER1_OVF_vect(void);
@@ -39,7 +38,7 @@ private:
 	static void (*s_counterCallback[MAX_COUNTER])(void);
 
 	// Boolean used to pause execution
-	static bool s_counterState[MAX_COUNTER];
+	static volatile bool s_counterState[MAX_COUNTER];
 };
 
 #endif // !EXTIA_COUNTER_H_
