@@ -26,3 +26,6 @@ This is a "how to" manual to use the GEEETECH vocal recognition module that we i
 > It is only available in French for the moment, English one is coming soon ! For the moment, you can enjoy the one already available on [GEEETECH's website](http://www.geeetech.com/wiki/images/6/69/Voice_Recognize_manual.pdf).
 
 ## CONTACT
+**Arnaud LAURENT**
+*Responsable de mécénat de compétences*
+alaurent@extia.fr
