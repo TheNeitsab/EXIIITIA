@@ -99,6 +99,8 @@ void loop() {
       hand.shifumi();
       while(digitalRead(shifumiButtonPin) == LOW);
     }
+
+    //add blocking constraints (pushbutton or timer)
     hand.moveIndex();
     hand.moveOther();
     hand.saveServos();
