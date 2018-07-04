@@ -5,7 +5,7 @@ EXIIITIA is a project implemented by EXTIA in order to provide our version of EX
 Contains the Arduino code `Charge_Indicator.ino` uploaded in the GEMMA located in the arm handling the battery level indicator operation.
 ### `Exiiitia`
 Contains the Arduino code `Exiiitia.ino` which is the original file imported in the arm, with a global C architecture, it is build around the original file provided by HACKberry and sligtly modified to fit our needs with some added specs such as vocal recognition module functions or inactivity check for servos.
-> Please note that even though this file is functional, it is quite old and might be a little bit tiring and hard to apprehend since everything is sored in this one and only file. See `My_Exiiitia` files for clearer options.
+> Please note that even though this file is functional, it is quite old and might be a little bit tiring and hard to apprehend since everything is stored in this one and only file. See `My_Exiiitia` files for clearer options.
 ### `LIB`
 Contains the library files that are used in following My_Exiitia Arduino codes.
 #### ExiiitiaLibV3 :
