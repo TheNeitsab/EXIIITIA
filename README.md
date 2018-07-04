@@ -32,9 +32,8 @@ Contains the Arduino code `My_Exiiitia_CPP.ino` which is basically also an homem
 This is the schematic with all the hardware that is contained into the prototype that we made.
 ### `Guide_GEMMA_EN.pdf` & `Guide_GEMMA_FR.pdf`
 These documents are "how to" manuals for GEMMA's use respectively in English and French.
-### `Guide_Module_GEEETECH_FR.pdf`
-This is a "how to" manual to use the GEEETECH vocal recognition module that we implemented in our prototype.
-> It is only available in French for the moment, English one is coming soon ! For the moment, you can enjoy the one already available on [GEEETECH's website](http://www.geeetech.com/wiki/images/6/69/Voice_Recognize_manual.pdf).
+### `Guide_Module_GEEETECH_EN.pdf` & `Guide_Module_GEEETECH_FR.pdf`
+This is a "how to" manual to configure and use the GEEETECH vocal recognition module that we implemented in our prototype.
 
 ## CONTACT
 **Arnaud LAURENT**
