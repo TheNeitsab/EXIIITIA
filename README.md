@@ -40,6 +40,11 @@ These documents are "how to" manuals for GEMMA's use respectively in English and
 This is a "how to" manual to configure and use the GEEETECH vocal recognition module that we implemented in our prototype.
 
 ## CONTACT
-**Arnaud LAURENT**
+*
+*Arnaud LAURENT**
 *Responsable de mécénat de compétences*
 alaurent@extia.fr
+*
+*Bastien GABRIELLI**
+*Ingénieur stagiaire Électronique/Numérique*
+bgabrielli@extia.fr
