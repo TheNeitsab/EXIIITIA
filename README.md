@@ -1,5 +1,7 @@
-# **EXIIITIA - EXIII's HACKberry by EXTIA**
+![# **EXIIITIA - EXIII's HACKberry by EXTIA**](https://github.com/TheNeitsab/EXIIITIA/blob/master/IMAGES/Hackberrybyextia.jpg?raw=true)
+
 EXIIITIA is a project implemented by EXTIA in order to provide our version of EXIII's HACKberry artificial arm as part of ANA's project which is to conceive and optimize an open-source robotic hand for Ana, a 13-year-old girl born with left arm agenesis.
+
 ## HARDWARE
 Here is a list of all the Hardware used for the arm (see DOCUMENTS/EXIIITIA_SCHEMATIC.png to get a better overview and see how everything is connected) :
 - [1 Arduino Micro](https://store.arduino.cc/usa/arduino-micro)
@@ -11,6 +13,7 @@ Here is a list of all the Hardware used for the arm (see DOCUMENTS/EXIIITIA_SCHE
 - [1 Force Sensing Resistor](https://www.adafruit.com/product/166)
 - [2 little servos](http://www.electronicoscaldas.com/datasheet/MG90S_Tower-Pro.pdf) & [1 big one](http://www.electronicoscaldas.com/datasheet/MG996R_Tower-Pro.pdf)
 - 3 Pushbuttons
+
 ## CODE
 ### `Charge_Indicator`
 Contains the Arduino code `Charge_Indicator.ino` uploaded in the GEMMA located in the arm handling the battery level indicator operation.
@@ -27,6 +30,7 @@ This library is an homemade counters library using Arduino timer 1 since we've b
 Contains a personal version of the software used for the arm's behavior, this Arduino code `My_Exiiitia.ino` is an extension of `Exiitia.ino` using homemade libraries managing counters using Arduino timers.
 ### `My_Exiiitia_CPP`
 Contains the Arduino code `My_Exiiitia_CPP.ino` which is basically also an homemade one with a C++ architecture.
+
 ## DOCUMENTS
 ### `EXIIITIA_SCHEMATIC.png`
 This is the schematic with all the hardware that is contained into the prototype that we made.
