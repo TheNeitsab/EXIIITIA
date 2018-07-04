@@ -13,12 +13,12 @@
 
  * Copyright (c) 2018 Bastien GABRIELLI
 
- * Exiiitia is free software: you can redistribute it and/or modify
+ * My_Exiiitia is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published 
  * by the Free Software Foundation, either version 3 of the License, 
  * or (at your option) any later version.
 
- * Exiiitia is distributed in the hope that it will be useful,but 
+ * My_Exiiitia is distributed in the hope that it will be useful,but 
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -285,8 +285,6 @@ void loop() {
     visualStrength(); 
     inactivity();    
     //shifumiGame();
-    troubleshooting();
-                    //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Timer blocage vocal
   }
 }
 
@@ -501,20 +499,6 @@ void shifumiGame(){
         }
       }
       DEBUG_PRINT("End of the game !");
-    }
-}
-
-// ===================  void troubleshooting()  ===================
-// Description : bypassing gemma behavior while a servo is moving
-//               to avoid any NeoPixel flickering
-
-// Parameters : NONE
-void troubleshooting(){
-  if(servoIndex.isMoving() || servoThumb.isMoving() || servoOther.isMoving() || (sensorValue >= sensorMin + 10)){
-      digitalWrite(pinCheck, HIGH);      
-    }
-    else{
-      digitalWrite(pinCheck, LOW);
     }
 }
 

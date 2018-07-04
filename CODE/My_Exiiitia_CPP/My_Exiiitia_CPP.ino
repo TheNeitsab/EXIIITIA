@@ -13,12 +13,12 @@
 
  * Copyright (c) 2018 Bastien GABRIELLI
 
- * Exiiitia is free software: you can redistribute it and/or modify
+ * My_Exiitia_CPP  is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published 
  * by the Free Software Foundation, either version 3 of the License, 
  * or (at your option) any later version.
 
- * Exiiitia is distributed in the hope that it will be useful,but 
+ * My_Exiitia_CPP  is distributed in the hope that it will be useful,but 
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -38,7 +38,7 @@
 // ==========================  SETTINGS  ==========================
 //if you'd like to change for your own settings, check ExiiitiaLibV3.h
 
-//fingers' settings according to hand's side (here hand is positioned LEFT,
+//fingers settings according to hand's side (here hand is positioned LEFT,
 //you may interchange ...MinPos and ...MaxPos if it is positioned RIGHT)
 FingerData indexData = {indexPin,
                         indexMinPos,
@@ -77,7 +77,7 @@ void setup() {
 // ================================================================
 
 void loop() {
-  //starting waiting for first calirbation before anything else
+  //waiting for first calibration before doing anything else
   while(1){
     if(digitalRead(calibButtonPin) == LOW){
       hand.calibration();
@@ -87,6 +87,7 @@ void loop() {
   //normal behavior of the hand
   while(1){
     hand.updateSensorValue();
+    //checking pushbuttons states
     if(digitalRead(thumbButtonPin) == LOW){
       while(digitalRead(thumbButtonPin) == LOW);
       hand.moveThumb();
@@ -99,8 +100,6 @@ void loop() {
       hand.shifumi();
       while(digitalRead(shifumiButtonPin) == LOW);
     }
-
-    //add blocking constraints (pushbutton or timer)
     hand.moveIndex();
     hand.moveOther();
     hand.saveServos();

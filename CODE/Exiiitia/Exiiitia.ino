@@ -11,7 +11,8 @@
  *  Arduino micro code for HACKberry.
  *  Origially created by exiii Inc.
  *  Edited by Genta Kondo on 2017/6/11.
- *  Adapted for EXTIA's E-Nable Project.
+ *  Adapted for EXIIITIA's Project by
+ *  GABRIELLI Bastien on 2018.
 */
 
 
@@ -46,17 +47,17 @@ Servo   servoIndex;     //index finger
 Servo   servoOther;     //other three fingers
 Servo   servoThumb;     //thumb
 
-SoftwareSerial   mySerial(3, 4);            //Setting RX, TX on pin 3, 4
+SoftwareSerial   mySerial(3, 4);  //Setting RX, TX on pin 3, 4
 
-int const   RPin    =   12;                 //Digital Pin for Red component of RGB LED
-int const   GPin    =   13;                 //Digital Pin for Green component of RGB LED
-int const   BPin    =   9;                  //Digital Pin for Blue component of RGB LED $$$$$$10
+int const   RPin    =   12;       //Digital Pin for Red component of RGB LED
+int const   GPin    =   13;       //Digital Pin for Green component of RGB LED
+int const   BPin    =   9;        //Digital Pin for Blue component of RGB LED $$$$$$10
 
-int   pinCalib;                             //enable calibration
+int   pinCalib;                   //enable calibration
 //int pinTBD;
-int   pinThumb;                             //open/close thumb
-int   pinOther;                             //lock/unlock other three fingers
-int   pinSensor = A0;                       //sensor's input
+int   pinThumb;                   //open/close thumb
+int   pinOther;                   //lock/unlock other three fingers
+int   pinSensor = A0;             //sensor's input
 
 // =========================  SOFTWARE  ===========================
 
@@ -64,7 +65,7 @@ int   pinSensor = A0;                       //sensor's input
 boolean   isThumbOpen   =   1;
 boolean   isOtherLock   =   0;
 
-int   swCount0, swCount1, swCount2, swCount3   =   0;   //pushbutton troubleshooting counters
+int   swCount0, swCount1, swCount2, swCount3   =   0;  //pushbutton troubleshooting counters
 
 unsigned long   previousBlock    =   0;                //Previous time for blocking
 unsigned long   currentBlock     =   0;                //Current time for blocking
@@ -74,21 +75,21 @@ const long    intBlock    =   3000;                    //Checking interval for b
 const long    intInact    =   15000;                   //Checking interval for inactivity
 const int   thresholdInact   =   20;                   //Inactivity threshold
 
-int   sensorValue   =   0;                              //value read from the sensor
-int   sensorMax     =   1024;                           //upper bound 
-int   sensorMin     =   0;                              //lower bound
+int   sensorValue   =   0;                             //value read from the sensor
+int   sensorMax     =   1024;                          //upper bound 
+int   sensorMin     =   0;                             //lower bound
 int   speed         =   0;
 int   position      =   0;
 
-const int   positionMax   =   100;                      //upper bound 
-const int   positionMin   =   0;                        //lower bound 
+const int   positionMax   =   100;                     //upper bound 
+const int   positionMin   =   0;                       //lower bound 
 
-int   prePosition                   =   0;              //previous position
+int   prePosition                   =   0;             //previous position
 //initial out settings 
-int   outThumb, outIndex, outOther  =   90;             //out values for positioning  
+int   outThumb, outIndex, outOther  =   90;            //out values for positioning  
 int   outThumbOpen, outThumbClose, outIndexOpen, outIndexClose, outOtherOpen, outOtherClose;
 
-byte   com = 0;                                         //Message got from Vocal Recognition Module
+byte   com = 0;                                        //Message got from Vocal Recognition Module
 
 // ================================================================
 // ===                      INITIAL SETUP                       ===
@@ -122,7 +123,7 @@ void setup(){
   }
   
   servoIndex.attach(2);         //index servo
-  servoOther.attach(5);         //other servo $$$$$$$5
+  servoOther.attach(5);         //other servo
   servoThumb.attach(6);         //thumb servo
   
   pinMode(pinCalib, INPUT);     //A6
@@ -227,7 +228,6 @@ void loop(){
       //Displaying Blue LED
       colorLED('B');
     }
-    //_____________________________________________________________ 
     //boundaries checking
     if(sensorValue<sensorMin) sensorValue=sensorMin;
     else if(sensorValue>sensorMax) sensorValue=sensorMax;

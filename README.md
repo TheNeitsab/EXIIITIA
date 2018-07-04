@@ -1,5 +1,16 @@
 # **EXIIITIA - EXIII's HACKberry by EXTIA**
 EXIIITIA is a project implemented by EXTIA in order to provide our version of EXIII's HACKberry artificial arm as part of ANA's project which is to conceive and optimize an open-source robotic hand for Ana, a 13-year-old girl born with left arm agenesis.
+## HARDWARE
+Here is a list of all the Hardware used for the arm (see DOCUMENTS/EXIIITIA_SCHEMATIC.png to get a better overview and see how everything is connected) :
+- [1 Arduino Micro](https://store.arduino.cc/usa/arduino-micro)
+- [1 Adafruit GEMMA V2](https://www.adafruit.com/product/1222)
+- [1 GEEETECH Voice recognition module](http://www.geeetech.com/wiki/index.php/Arduino_Voice_Recognition_Module)
+- [1 DC/DC Converter](https://www.amazon.fr/SODIAL-Abaisseur-Regulateur-Tension-Ajustable/dp/B00JGFEGG4/ref=pd_sim_107_1?_encoding=UTF8&pd_rd_i=B00JGFEGG4&pd_rd_r=2630e3d8-7f66-11e8-b707-a7ec52204a2a&pd_rd_w=iQ7HK&pd_rd_wg=8EBfT&pf_rd_i=desktop-dp-sims&pf_rd_m=A1X6FK5RDHNB96&pf_rd_p=8946694021807602816&pf_rd_r=9M8TWWDEC4EY7C10XZ0G&pf_rd_s=desktop-dp-sims&pf_rd_t=40701&psc=1&refRID=9M8TWWDEC4EY7C10XZ0G)
+- [1 RGB LED](https://www.adafruit.com/product/159)
+- [4 Adafruit NeoPixels](https://www.adafruit.com/product/1612)
+- [1 Force Sensing Resistor](https://www.adafruit.com/product/166)
+- [2 little servos](http://www.electronicoscaldas.com/datasheet/MG90S_Tower-Pro.pdf) & [1 big one](http://www.electronicoscaldas.com/datasheet/MG996R_Tower-Pro.pdf)
+- 3 Pushbuttons
 ## CODE
 ### `Charge_Indicator`
 Contains the Arduino code `Charge_Indicator.ino` uploaded in the GEMMA located in the arm handling the battery level indicator operation.
