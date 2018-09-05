@@ -120,7 +120,7 @@ volatile boolean  checkCalib = false;
 ExtiaCounter  Inact;
 volatile boolean  checkInact = false;
 ExtiaCounter  TEST;
-boolean  checkTEST = false;
+volatile boolean  checkTEST = false;
 //digital pins for RGB components of RGB LED
 int const   pinR   =   12;    //RED          
 int const   pinG   =   13;    //GREEN       

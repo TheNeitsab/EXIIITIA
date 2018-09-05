@@ -1,6 +1,6 @@
 ![# **EXIIITIA - EXIII's HACKberry by EXTIA**](https://github.com/TheNeitsab/EXIIITIA/blob/master/IMAGES/Hackberrybyextia.jpg?raw=true)
 
-EXIIITIA is a project implemented by EXTIA in order to provide our version of EXIII's HACKberry artificial arm as part of ANA's project which is to conceive and optimize an open-source robotic hand for Ana, a 13-year-old girl born with left arm agenesis.
+EXIIITIA (HACKberry by EXTIA) is a project implemented by EXTIA in order to provide our version of EXIII's HACKberry artificial arm as part of ANA's project which is to conceive and optimize an open-source robotic hand for Ana, a 13-year-old girl born with left arm agenesis.
 
 ## HARDWARE
 Here is a list of all the Hardware used for the arm (see DOCUMENTS/EXIIITIA_SCHEMATIC.png to get a better overview and see how everything is connected) :
@@ -19,11 +19,11 @@ Here is a list of all the Hardware used for the arm (see DOCUMENTS/EXIIITIA_SCHE
 Contains the Arduino code `Charge_Indicator.ino` uploaded in the GEMMA located in the arm handling the battery level indicator operation.
 ### `Exiiitia`
 Contains the Arduino code `Exiiitia.ino` which is the original file imported in the arm, with a global C architecture, it is build around the original file provided by HACKberry and sligtly modified to fit our needs with some added specs such as vocal recognition module functions or inactivity check for servos.
-> Please note that even though this file is functional, it is quite old and might be a little bit tiring and hard to apprehend since everything is stored in this one and only file. See `My_Exiiitia` files for clearer options.
+> Please note that even though this file is functional, it is quite old and might be a little bit tiring and hard to apprehend since everything is stored in this one and only file. See `My_Exiiitia` and `My_Exiiitia_CPP` files for clearer options.
 ### `LIB`
 Contains the library files that are used in following My_Exiitia Arduino codes.
 #### ExiiitiaLibV3 :
-This library is the one mananging the hand behavior for `My_Exiiitia_CPP.ino`.
+This library is the one managing the hand behavior for `My_Exiiitia_CPP.ino`.
 #### ExtiaCounter :
 This library is an homemade counters library using Arduino timer 1 since we've been facing some issues with interferences because of the use of LEDs, servos, softwareSerial etc...
 ### `My_Exiiitia`
@@ -39,9 +39,16 @@ These documents are "how to" manuals for GEMMA's use respectively in English and
 ### `Guide_Module_GEEETECH_EN.pdf` & `Guide_Module_GEEETECH_FR.pdf`
 This is a "how to" manual to configure and use the GEEETECH vocal recognition module that we implemented in our prototype.
 
+## HOW TO USE
+### `GEMMA`
+- Since it only manages what is related to the battery charge state, you only have to upload  the code `Charge_Indicator.ino` inside.
+
+### `ARDUINO`
+- If you plan to use the original file that has been created for the prototype, upload the code `Exiiitia.ino` to the microcontroller.
+- When it comes to the use of `My_Exiiitia.ino`, this code is working using the homemade counters' library `ExtiaCounter`, then, in order to work properly you need to put the entire `ExtiaCounter` folder inside your Arduino libraries folder (it might be located at `.\Program Files\Arduino\libraries`).
+- Finally, `My_Exiiitia_CPP.ino` needs a further library to work, which is `ExiiitiaLibV3`, therefore you must place both this one and the previous one in the Arduino libraries folder.
+
 ## CONTACT
-
-
 **Arnaud LAURENT**
 *Responsable de mécénat de compétences*
 alaurent@extia.fr
